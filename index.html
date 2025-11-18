@@ -19,8 +19,11 @@
 </head>
 <body>
   <h2>Provider Availability & Preferences</h2>
+
+  <!-- This line will be filled based on role -->
+  <p id="shift_info" class="small"></p>
+
   <p class="small">
-    Shifts (fixed by role): ABEM 8a–8p, FM/IM 12p–12a, APP 7a–7p.
     Please mark all days you are willing to work during this 3-month block.
     At minimum, you must complete Month 1.
   </p>
@@ -33,6 +36,7 @@
     <input type="hidden" id="month1_availability" name="month1_availability" />
     <input type="hidden" id="month2_availability" name="month2_availability" />
     <input type="hidden" id="month3_availability" name="month3_availability" />
+    <input type="hidden" id="shift_template" name="shift_template" />
 
     <label>
       Name
@@ -83,7 +87,7 @@
 
   <script>
     // ===== CONFIG: Change these for each 3-month scheduling block =====
-    // Example 1: Jan–Mar 2026
+    // Example: Jan–Mar 2026
     const BASE_YEAR = 2026;
     const BASE_MONTH = 0; // 0=Jan, 3=Apr, 6=Jul, 9=Oct
 
@@ -95,13 +99,41 @@
     document.getElementById('provider_id').value = pid;
     document.getElementById('role').value = role;
 
-    // Optional: small map for auto-filling names/emails if you want
-    const providerMap = {
-      // "ABEM_PBIGGANE": { name: "Peter Biggane", email: "peter@example.com" },
+    // Prefill name from ?name=First%20Last
+    const nameFromUrl = params.get('name');
+    if (nameFromUrl) {
+      document.getElementById('name').value = nameFromUrl;
+    }
+
+    // Prefill email from ?email=
+    const emailFromUrl = params.get('email');
+    if (emailFromUrl) {
+      document.getElementById('email').value = emailFromUrl;
+    }
+
+    // Show role-specific shift times and set template
+    const roleShiftInfo = {
+      ABEM: {
+        label: "Your shift template for selected days: ABEM 8:00 am – 8:00 pm",
+        template: "08:00-20:00"
+      },
+      FMIM: {
+        label: "Your shift template for selected days: FM/IM 12:00 pm – 12:00 am",
+        template: "12:00-00:00"
+      },
+      APP: {
+        label: "Your shift template for selected days: APP 7:00 am – 7:00 pm",
+        template: "07:00-19:00"
+      }
     };
-    if (providerMap[pid]) {
-      if (providerMap[pid].name) document.getElementById('name').value = providerMap[pid].name;
-      if (providerMap[pid].email) document.getElementById('email').value = providerMap[pid].email;
+
+    const shiftInfo = roleShiftInfo[role];
+    if (shiftInfo) {
+      document.getElementById('shift_info').textContent = shiftInfo.label;
+      document.getElementById('shift_template').value = shiftInfo.template;
+    } else {
+      document.getElementById('shift_info').textContent =
+        "Shifts (fixed by role): ABEM 8a–8p, FM/IM 12p–12a, APP 7a–7p.";
     }
 
     // Set cycle_start to first day of Month 1
