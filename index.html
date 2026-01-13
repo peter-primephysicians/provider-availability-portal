@@ -75,9 +75,9 @@
 
   <script>
     // ===== CONFIG: Change these for each 3-month scheduling block =====
-    // Example: Jan–Mar 2026
+    // Example: Apr–Jun 2026
     const BASE_YEAR = 2026;
-    const BASE_MONTH = 0; // 0=Jan, 3=Apr, 6=Jul, 9=Oct
+    const BASE_MONTH = 3; // 0=Jan, 3=Apr, 6=Jul, 9=Oct
 
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzEeDIAtvj93ur72Mc1mPiue9OaW7PpmOFOjWk3CBnGLUm95gjn7Pu7JszUJm0e3mf8yw/exec';
 
@@ -233,7 +233,7 @@
 
       // Require at least one available day in Month 1 on first submission
       if (!data.month1_availability || data.month1_availability === '[]') {
-        statusEl.textContent = 'Please select at least one available day in Month 1 (January).';
+        statusEl.textContent = 'Please select at least one available day in Month 1 (April).';
         return;
       }
 
