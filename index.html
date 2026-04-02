@@ -7,12 +7,15 @@
     body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; }
     label { display: block; margin-top: 10px; font-weight: bold; }
     input, textarea { width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box; }
+
     .month-block { margin-top: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
     .month-title { font-weight: bold; margin-bottom: 5px; }
     .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 5px; }
+
     .day { padding: 6px; border: 1px solid #ccc; text-align: center; cursor: pointer; font-size: 0.85rem; }
     .day-header { font-weight: bold; border: none; cursor: default; }
     .selected { background-color: #cce5ff; }
+
     button { margin-top: 15px; padding: 8px 16px; }
     #status { margin-top: 10px; font-weight: bold; }
     .small { font-size: 0.85rem; color: #555; }
@@ -21,7 +24,6 @@
 <body>
   <h2>Provider Availability & Preferences</h2>
   <p>Please confirm your contact information and select your available days for this 3-month block.</p>
-
   <p id="shift_info" class="small"></p>
 
   <form id="providerForm">
@@ -75,14 +77,16 @@
 
   <script>
     // ===== CONFIG: Change these for each 3-month scheduling block =====
-    // Example: Apr–Jun 2026
+
+    // Example: Jul–Sep 2026
     const BASE_YEAR = 2026;
-    const BASE_MONTH = 3; // 0=Jan, 3=Apr, 6=Jul, 9=Oct
+    const BASE_MONTH = 6; // 0=Jan, 3=Apr, 6=Jul, 9=Oct
 
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzEeDIAtvj93ur72Mc1mPiue9OaW7PpmOFOjWk3CBnGLUm95gjn7Pu7JszUJm0e3mf8yw/exec';
 
     // Read provider ID & role from URL (e.g. ?pid=ABEM_X&role=ABEM&name=First%20Last&email=foo)
     const params = new URLSearchParams(window.location.search);
+
     const pid = params.get('pid') || '';
     const role = params.get('role') || '';
 
@@ -93,6 +97,7 @@
     if (nameFromUrl) {
       document.getElementById('name').value = decodeURIComponent(nameFromUrl);
     }
+
     const emailFromUrl = params.get('email');
     if (emailFromUrl) {
       document.getElementById('email').value = decodeURIComponent(emailFromUrl);
@@ -135,10 +140,11 @@
       const container = document.getElementById(containerId);
       const labelEl = document.getElementById(labelId);
       const hiddenInput = document.getElementById(hiddenInputId);
+
       container.innerHTML = '';
 
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                          'July', 'August', 'September', 'October', 'November', 'December'];
+        'July', 'August', 'September', 'October', 'November', 'December'];
       labelEl.textContent = monthNames[monthIndex] + ' ' + year;
 
       const selectedDates = new Set();
@@ -175,6 +181,7 @@
           if (dayEl.classList.contains('disabled')) {
             return; // do nothing if block is already submitted
           }
+
           if (selectedDates.has(iso)) {
             selectedDates.delete(iso);
             dayEl.classList.remove('selected');
@@ -182,6 +189,7 @@
             selectedDates.add(iso);
             dayEl.classList.add('selected');
           }
+
           hiddenInput.value = JSON.stringify(Array.from(selectedDates).sort());
         });
 
@@ -189,7 +197,7 @@
       }
     }
 
-    buildMonthCalendar(BASE_YEAR, BASE_MONTH,     'month1_calendar', 'month1_availability', 'month1_label');
+    buildMonthCalendar(BASE_YEAR, BASE_MONTH, 'month1_calendar', 'month1_availability', 'month1_label');
     buildMonthCalendar(BASE_YEAR, BASE_MONTH + 1, 'month2_calendar', 'month2_availability', 'month2_label');
     buildMonthCalendar(BASE_YEAR, BASE_MONTH + 2, 'month3_calendar', 'month3_availability', 'month3_label');
 
@@ -197,16 +205,26 @@
     async function checkExistingSubmission() {
       const statusEl = document.getElementById('status');
       if (!pid) return;
+
       try {
-        const resp = await fetch(SCRIPT_URL + '?provider_id=' + encodeURIComponent(pid));
+        const resp = await fetch(
+          SCRIPT_URL +
+          '?provider_id=' + encodeURIComponent(pid) +
+          '&cycle_start=' + encodeURIComponent(cycleStartIso)
+        );
+
         if (!resp.ok) return;
+
         const result = await resp.json();
+
         if (result.status === 'SUBMITTED') {
           statusEl.textContent =
             'Our records show you have already submitted availability for this 3-month block. ' +
             'If you need any changes, please contact the scheduler.';
+
           const submitBtn = document.getElementById('submit_button');
           if (submitBtn) submitBtn.disabled = true;
+
           // Visually disable calendars
           document.querySelectorAll('.calendar .day').forEach(el => {
             el.classList.add('disabled');
@@ -223,9 +241,11 @@
 
     // ===== Submission handler =====
     const form = document.getElementById('providerForm');
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const statusEl = document.getElementById('status');
+
       statusEl.textContent = 'Submitting...';
 
       const formData = new FormData(e.target);
@@ -233,7 +253,7 @@
 
       // Require at least one available day in Month 1 on first submission
       if (!data.month1_availability || data.month1_availability === '[]') {
-        statusEl.textContent = 'Please select at least one available day in Month 1 (April).';
+        statusEl.textContent = 'Please select at least one available day in Month 1 (July).';
         return;
       }
 
@@ -258,6 +278,7 @@
           statusEl.textContent =
             'Our records show you have already submitted availability for this 3-month block. ' +
             'If you need to make changes, please contact the scheduler.';
+
           const submitBtn = document.getElementById('submit_button');
           if (submitBtn) submitBtn.disabled = true;
           return;
